@@ -29,34 +29,6 @@ Open `src/GameCharacter.cpp` and follow every `TODO` comment. Each section tells
 8. **`getSummary()`** — returns a formatted string of the character's info
 9. **`print()`** — prints the summary to the console
 
-## Building & Running
-
-### Configure and Build
-
-```bash
-cmake -S . -B out/build
-cmake --build out/build
-```
-
-### Run the Program
-
-```bash
-./out/build/GameCharacter        # Linux/Mac
-out\build\Debug\GameCharacter    # Windows (MSVC)
-```
-
-### Run the Tests
-
-```bash
-cd out/build && ctest --output-on-failure
-```
-
-Or run the test executable directly:
-
-```bash
-./out/build/run_tests            # Linux/Mac
-out\build\Debug\run_tests        # Windows (MSVC)
-```
 
 ## Expected Output (when all TODOs are complete)
 
@@ -87,7 +59,8 @@ When you run the program, you should see output similar to:
 GameCharacter destroyed: Gimli
 
 --- Heap Array ---
-8) Heap array of 3 default characters:
+8) Enter party size: 3
+   Heap array of 3 default characters:
    [0] [Unknown] Class: Warrior, Level: 1, HP: 100
    [1] [Unknown] Class: Warrior, Level: 1, HP: 100
    [2] [Unknown] Class: Warrior, Level: 1, HP: 100
