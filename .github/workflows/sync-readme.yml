@@ -1,0 +1,68 @@
+name: Sync Assignment README
+
+# Triggered by repository_dispatch from private assignment repos
+on:
+  repository_dispatch:
+    types: [sync-readme]
+
+# Also allow manual trigger from the Actions tab
+  workflow_dispatch:
+    inputs:
+      source_repo:
+        description: 'Source repo (org/repo format)'
+        required: true
+        type: string
+      folder_name:
+        description: 'Destination folder name in this repo'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v4
+
+      - name: Determine source repo and folder
+        id: vars
+        run: |
+          # repository_dispatch provides these in client_payload
+          # workflow_dispatch provides them as inputs
+          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            echo "source_repo=${{ github.event.client_payload.source_repo }}" >> $GITHUB_OUTPUT
+            echo "folder_name=${{ github.event.client_payload.folder_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "source_repo=${{ github.event.inputs.source_repo }}" >> $GITHUB_OUTPUT
+            echo "folder_name=${{ github.event.inputs.folder_name }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Fetch README from private repo
+        env:
+          GH_TOKEN: ${{ secrets.ASSIGNMENT_REPO_PAT }}
+        run: |
+          mkdir -p "${{ steps.vars.outputs.folder_name }}"
+
+          # Use GitHub API to fetch README content from the private repo
+          gh api "repos/${{ steps.vars.outputs.source_repo }}/contents/README.md" \
+            --jq '.content' | base64 -d > "${{ steps.vars.outputs.folder_name }}/README.md"
+
+          echo "Fetched README from ${{ steps.vars.outputs.source_repo }}"
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add "${{ steps.vars.outputs.folder_name }}/README.md"
+
+          # Only commit if there are actual changes
+          if git diff --cached --quiet; then
+            echo "No changes to README — skipping commit"
+          else
+            git commit -m "Sync README from ${{ steps.vars.outputs.source_repo }}"
+            git push
+          fi
